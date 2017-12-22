@@ -85,12 +85,12 @@ function ScopeStat() {
 
 function EnemyStat() {
 	// separate stats for defense and offense
-	this.defense = new ScopeStat();
+	this.defense = new SimpleStat();
 	this.offense = new SimpleStat();
 	// a function to convert this sort of stat to a SimpleStat
 	this.collapse = function() {
 		var ret = new SimpleStat();
-		addStat(ret, this.defense.collapse());
+		addStat(ret, this.defense);
 		addStat(ret, this.offense);
 		return ret;
 	}
@@ -99,12 +99,12 @@ function EnemyStat() {
 function MyStat() {
 	// separate stats for defense and offense
 	this.defense = new SimpleStat();
-	this.offense = new ScopeStat();
+	this.offense = new SimpleStat();
 	// a function to convert this sort of stat to a SimpleStat
 	this.collapse = function() {
 		var ret = new SimpleStat();
 		addStat(ret, this.defense);
-		addStat(ret, this.offense.collapse());
+		addStat(ret, this.offense);
 		return ret;
 	}
 }
@@ -244,17 +244,13 @@ function summUpEnemyObject(obj, stat) {
 	var ret = classifyObject(obj);
 	var w = obj.cost;
 	if (obj.type === STRUCTURE) {
-		for (var scope in SCOPES)
-			if (canReachBy(scope, obj)) // structures don't move, so they are usually counted as defense
-				addStat(stat.defense[scope], ret, w);
+		addStat(stat.defense, ret, w);  // structures don't move, so they are usually counted as defense
 		if (obj.range > baseScale * 2) // unless they're covering the whole map with their range
 			addStat(stat.offense, ret, w);
 	}
 	if (obj.type === DROID) {
-		for (var scope in SCOPES) 
-			if (canReachBy(scope, obj)) // if the droid can't reach your base, we count it as defense only
-				addStat(stat.defense[scope], ret, w);
-		if (threatensBase(obj)) // otherwise count them as offense as well
+		addStat(stat.defense, ret, w);
+		if (threatensBase(obj)) 
 			addStat(stat.offense, ret, w);
 	}
 }
@@ -265,21 +261,16 @@ function summUpMyObject(obj, stat) {
 	if (obj.type === STRUCTURE) {
 		addStat(stat.defense, ret, w);
 		if (obj.range > baseScale * 2) 
-			for (var scope in SCOPES)
-				addStat(stat.offense[scope], ret, w);
+			addStat(stat.offense, ret, w);
 	}
 	if (obj.type === DROID) {
-		if (obj.group === miscGroup)
+		if (obj.group === miscGroup || obj.group === defGroup)
 			addStat(stat.defense, ret, w);
 		var list = enumLivingPlayers();
+		var list2=[];
 		list.forEach(function(p) {
 			if (isEnemy(p)) {
-				if (countLandTargets(p) > 0)
-					addStat(stat.offense.land, ret, w / list.length);
-				if (countSeaTargets(p) > 0)
-					addStat(stat.offense.sea, ret, w / list.length);
-				if (countAirTargets(p) > 0)
-					addStat(stat.offense.air, ret, w / list.length);
+				addStat(stat.offense, ret, w / list.length);
 			}
 		});
 	}
