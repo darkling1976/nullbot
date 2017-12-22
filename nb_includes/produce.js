@@ -164,11 +164,6 @@ _global.checkTruckProduction = function() {
 					return true;
 		if (defined(f))
 			return false;
-		f = enumFinishedStructList(structures.templateFactories)[0];
-		if (defined(f))
-			if (structureIdle(f))
-				if (produceTemplateFromList(f, truckTemplates))
-					return true;
 	}
 	if (!iHaveArty())
 		return false;
